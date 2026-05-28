@@ -26,6 +26,11 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      ["expo-image-picker",
+        {
+          "photosPermission": "O aplicativo precisa acessar suas fotos para que você possa escolher uma imagem de perfil."
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",

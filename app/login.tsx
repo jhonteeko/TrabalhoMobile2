@@ -78,8 +78,8 @@ export default function LoginScreen() {
           <View style={styles.logoBox}>
             <Text style={styles.logoText}>✦</Text>
           </View>
-          <Text style={styles.appName}>NOME DO APP</Text>
-          <Text style={styles.tagline}>Sua tagline aqui</Text>
+          <Text style={styles.appName}>ANUNCIOS!!!!</Text>
+          <Text style={styles.tagline}>FIQUE RICO SEM MOVER UM DEDO!!!!!</Text>
         </View>
 
         {/* Card */}
