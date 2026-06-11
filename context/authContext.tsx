@@ -1,180 +1,96 @@
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from 'expo-secure-store';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { Platform } from 'react-native';
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import { apiLogin, apiRegister, ApiUser } from '@/service/authService';
 
-import { Platform } from "react-native";
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 
-const USER_KEY = "user";
-
-type User = {
-  username: string;
-  password: string;
+export type User = ApiUser & {
+  token: string; // JWT para requisições autenticadas
 };
 
 type AuthContextType = {
   user: User | null;
-
-  registerUser: (
-    username: string,
-    password: string
-  ) => Promise<void>;
-
-  loginUser: (
-    username: string,
-    password: string
-  ) => Promise<boolean>;
-
+  loading: boolean; // verdadeiro enquanto restaura sessão do storage
+  registerUser: (name: string, password: string) => Promise<void>;
+  loginUser: (name: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 };
 
-const AuthContext =
-  createContext<AuthContextType>(
-    {} as AuthContextType
-  );
+// ─── Helpers de storage ───────────────────────────────────────────────────────
 
-type Props = {
-  children: ReactNode;
-};
+const SESSION_KEY = 'session';
 
-export function AuthProvider({
-  children,
-}: Props) {
-  const [user, setUser] =
-    useState<User | null>(null);
-
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  async function loadUser() {
-    try {
-      let data = null;
-
-      if (Platform.OS === "web") {
-        data =
-          localStorage.getItem(USER_KEY);
-      } else {
-        data =
-          await SecureStore.getItemAsync(
-            USER_KEY
-          );
-      }
-
-      if (data) {
-        setUser(JSON.parse(data));
-      }
-    } catch (error) {
-      console.log(
-        "Erro ao carregar usuário"
-      );
-    }
-  }
-
-  async function registerUser(
-    username: string,
-    password: string
-  ) {
-    try {
-      const newUser: User = {
-        username,
-        password,
-      };
-
-      if (Platform.OS === "web") {
-        localStorage.setItem(
-          USER_KEY,
-          JSON.stringify(newUser)
-        );
-      } else {
-        await SecureStore.setItemAsync(
-          USER_KEY,
-          JSON.stringify(newUser)
-        );
-      }
-
-      setUser(newUser);
-
-      console.log("Usuário salvo:");
-      console.log(newUser);
-
-    } catch (error) {
-      console.log("Erro ao registrar");
-    }
-  }
-async function loginUser(
-  username: string,
-  password: string
-) {
-  try {
-    let data = null;
-
-    if (Platform.OS === "web") {
-      data = localStorage.getItem(USER_KEY);
-    } else {
-      data = await SecureStore.getItemAsync(
-        USER_KEY
-      );
-    }
-
-    if (!data) {
-      return false;
-    }
-
-    const savedUser: User =
-      JSON.parse(data);
-
-    if (
-      savedUser.username === username &&
-      savedUser.password === password
-    ) {
-      setUser(savedUser);
-
-      return true;
-    }
-
-    return false;
-
-  } catch (error) {
-    console.log("Erro no login");
-
-    return false;
-  }
+async function getStorage(key: string): Promise<string | null> {
+  if (Platform.OS === 'web') return localStorage.getItem(key);
+  return SecureStore.getItemAsync(key);
 }
 
-  async function logout() {
-    try {
-      if (Platform.OS === "web") {
-        localStorage.removeItem(
-          USER_KEY
-        );
-      } else {
-        await SecureStore.deleteItemAsync(
-          USER_KEY
-        );
+async function setStorage(key: string, value: string): Promise<void> {
+  if (Platform.OS === 'web') return void localStorage.setItem(key, value);
+  return SecureStore.setItemAsync(key, value);
+}
+
+async function removeStorage(key: string): Promise<void> {
+  if (Platform.OS === 'web') return void localStorage.removeItem(key);
+  return SecureStore.deleteItemAsync(key);
+}
+
+// ─── Context ──────────────────────────────────────────────────────────────────
+
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Restaura sessão salva ao abrir o app
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await getStorage(SESSION_KEY);
+        if (raw) setUser(JSON.parse(raw));
+      } catch {
+        // sessão corrompida — ignora
+      } finally {
+        setLoading(false);
       }
+    })();
+  }, []);
 
-      setUser(null);
+  // Salva sessão no storage e atualiza state
+  async function saveSession(sessionUser: User) {
+    await setStorage(SESSION_KEY, JSON.stringify(sessionUser));
+    setUser(sessionUser);
+  }
 
-    } catch (error) {
-      console.log("Erro ao sair");
+  // ── registerUser ──────────────────────────────────────────────────────────
+  async function registerUser(name: string, password: string) {
+    // A API agora retorna token + user no registro (veja auth.js atualizado)
+    const { token, user: apiUser } = await apiRegister(name, password);
+    await saveSession({ ...apiUser, token });
+  }
+
+  // ── loginUser ─────────────────────────────────────────────────────────────
+  async function loginUser(name: string, password: string): Promise<boolean> {
+    try {
+      const { token, user: apiUser } = await apiLogin(name, password);
+      await saveSession({ ...apiUser, token });
+      return true;
+    } catch {
+      return false;
     }
+  }
+
+  // ── logout ────────────────────────────────────────────────────────────────
+  async function logout() {
+    await removeStorage(SESSION_KEY);
+    setUser(null);
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        registerUser,
-        loginUser,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, registerUser, loginUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
