@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const express = require('express')
 const cors = require('cors')
+JWT_SECRET = process.env.JWT_SECRET
 
 const authRoutes = require('./routes/auth')
 

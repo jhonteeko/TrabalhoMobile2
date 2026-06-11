@@ -19,9 +19,11 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '../../context/authContext';
 
+
+
 export default function Home() {
   const { user, logout } = useAuth();
-
+  console.log('user no home:', JSON.stringify(user)); 
   const [profileOpen, setProfileOpen] = useState(false);
   const [editName, setEditName] = useState(user?.name ?? '');
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -113,7 +115,6 @@ export default function Home() {
         <Text style={styles.title}>Home</Text>
 
         <Text style={styles.text}>Bem-vindo,</Text>
-        {/* user.name — campo correto vindo da API */}
         <Text style={styles.value}>{user.name}</Text>
 
         <Text style={styles.idLabel}>ID #{user.id}</Text>
