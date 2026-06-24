@@ -9,7 +9,20 @@ datasource db {
 
 model User {
   id        Int      @id @default(autoincrement())
-  name     String   @unique
+  name      String   @unique
   password  String
   createdAt DateTime @default(now())
+  ads       Ad[]
+}
+
+model Ad {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  price       String
+  tag         String
+  photo       String @default("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQMuowloNOhI2zc4H-Hs8cP5yPACmgnfYwn1GWNdZ3zg&s=10")
+  createdAt   DateTime @default(now())
+  sellerId    Int
+  seller      User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 }

@@ -12,6 +12,16 @@ export type AuthResponse = {
   user: ApiUser;
 };
 
+export type Ad= {
+  id: number;
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+  photo: string;
+  seller: string;
+}
+
 // ─── Helper interno ───────────────────────────────────────────────────────────
 
 async function post<T>(path: string, body: object, token?: string): Promise<T> {
@@ -37,7 +47,36 @@ async function post<T>(path: string, body: object, token?: string): Promise<T> {
   }
 
   return data as T;
+}export async function apiGetAds(): Promise<Ad[]> {
+  const response = await fetch(`${API_URL}/ads`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Erro ao carregar anúncios');
+  return data;
 }
+
+export async function apiCreateAd(adData: {
+  title: string;
+  description: string;
+  price: string;
+  category: string;
+  photo: string;
+  sellerId: number;
+}): Promise<Ad> {
+  const response = await fetch(`${API_URL}/ads`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(adData),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Erro ao criar anúncio');
+  return data;
+}
+
+
+
 
 // ─── Endpoints públicos ───────────────────────────────────────────────────────
 

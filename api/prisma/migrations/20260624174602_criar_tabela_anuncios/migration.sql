@@ -1,0 +1,12 @@
+-- CreateTable
+CREATE TABLE "Ad" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "price" TEXT NOT NULL,
+    "tag" TEXT NOT NULL,
+    "photo" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "sellerId" INTEGER NOT NULL,
+    CONSTRAINT "Ad_sellerId_fkey" FOREIGN KEY ("sellerId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);

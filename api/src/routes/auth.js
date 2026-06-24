@@ -6,20 +6,15 @@ const prisma = require('../prisma')
 
 const router = express.Router()
 
-// Nunca hardcode secrets — use variável de ambiente
 const JWT_SECRET = process.env.JWT_SECRET
 
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET não definido no .env')
 }
 
-// ─── Helper: gera token ───────────────────────────────────────────────────────
-
 function generateToken(userId) {
   return jwt.sign({ id: userId }, JWT_SECRET, { expiresIn: '7d' })
 }
-
-// ─── POST /auth/register ──────────────────────────────────────────────────────
 
 router.post('/register', async (req, res) => {
   try {
@@ -47,7 +42,6 @@ router.post('/register', async (req, res) => {
 
     const token = generateToken(user.id)
 
-    // Retorna token + dados do usuário (sem a senha)
     res.status(201).json({
       token,
       user: {
@@ -83,7 +77,6 @@ router.post('/login', async (req, res) => {
 
     const token = generateToken(user.id)
 
-    // Retorna token + dados do usuário (sem a senha)
     res.json({
       token,
       user: {

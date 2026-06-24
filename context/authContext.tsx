@@ -7,18 +7,16 @@ import { apiLogin, apiRegister, ApiUser } from '@/service/authService';
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export type User = ApiUser & {
-  token: string; // JWT para requisições autenticadas
+  token: string;
 };
 
 type AuthContextType = {
   user: User | null;
-  loading: boolean; // verdadeiro enquanto restaura sessão do storage
+  loading: boolean;
   registerUser: (name: string, password: string) => Promise<void>;
   loginUser: (name: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 };
-
-// ─── Helpers de storage ───────────────────────────────────────────────────────
 
 const SESSION_KEY = 'session';
 
@@ -52,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const raw = await getStorage(SESSION_KEY);
         if (raw) setUser(JSON.parse(raw));
       } catch {
-        // sessão corrompida — ignora
+
       } finally {
         setLoading(false);
       }
