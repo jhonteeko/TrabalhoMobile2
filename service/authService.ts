@@ -17,7 +17,7 @@ export type Ad= {
   title: string;
   description: string;
   price: number;
-  category: string;
+  tag: string;
   photo: string;
   seller: string;
 }
@@ -61,7 +61,7 @@ export async function apiCreateAd(adData: {
   title: string;
   description: string;
   price: string;
-  category: string;
+  tag: string;
   photo: string;
   sellerId: number;
 }): Promise<Ad> {

@@ -65,7 +65,6 @@ export default function LoginScreen() {
 
       router.replace('/home');
     } catch (err: any) {
-      // Exibe a mensagem de erro vinda da API, se existir
       setError(err?.message ?? 'Erro ao entrar');
     } finally {
       setSubmitting(false);
@@ -90,8 +89,8 @@ export default function LoginScreen() {
           <View style={styles.logoBox}>
             <Text style={styles.logoText}>✦</Text>
           </View>
-          <Text style={styles.appName}>NOME DO APP</Text>
-          <Text style={styles.tagline}>Seu subtítulo aqui</Text>
+          <Text style={styles.appName}>Anunciando</Text>
+          <Text style={styles.tagline}>Bota suas tralhas a venda aqui!!!!!</Text>
         </View>
 
         {/* Card */}

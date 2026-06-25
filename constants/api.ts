@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-const DEV_IP = '192.168.0.114'; // Substitua pelo IP do seu computador na rede local
+const DEV_IP = '192.168.0.114';
 
 const DEV_URL = Platform.select({
   web: 'http://localhost:3000',

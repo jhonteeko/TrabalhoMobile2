@@ -1,13 +1,13 @@
 const express = require('express')
-const prisma = require('../prisma') // Puxa o seu cliente Prisma global
+const prisma = require('../prisma')
 const router = express.Router()
 
 // 1. Rota para Salvar o Anúncio no Banco
 router.post('/', async (req, res) => {
   try {
-    const { title, description, price, category, photo, sellerId } = req.body
+    const { title, description, price, tag, photo, sellerId } = req.body
 
-    if (!title || !description || !price || !category || !sellerId) {
+    if (!title || !description || !price || !tag || !sellerId) {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios' })
     }
 
@@ -16,7 +16,7 @@ router.post('/', async (req, res) => {
         title,
         description,
         price,
-        category,
+        tag,
         photo: photo || 'https://picsum.photos/seed/market/400/300',
         sellerId: parseInt(sellerId),
       },
@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
       title: newAd.title,
       description: newAd.description,
       price: newAd.price,
-      category: newAd.category,
+      tag: newAd.tag,
       photo: newAd.photo,
       seller: newAd.seller.name
     })
@@ -56,7 +56,7 @@ router.get('/', async (req, res) => {
       title: ad.title,
       description: ad.description,
       price: ad.price,
-      category: ad.category,
+      tag: ad.tag,
       photo: ad.photo,
       seller: ad.seller.name
     }))
