@@ -1,6 +1,6 @@
 import { API_URL } from '@/constants/api';
 
-// ─── Tipos de resposta da API ─────────────────────────────────────────────────
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export type ApiUser = {
   id: number;
@@ -12,7 +12,7 @@ export type AuthResponse = {
   user: ApiUser;
 };
 
-export type Ad= {
+export type Ad = {
   id: number;
   title: string;
   description: string;
@@ -22,16 +22,18 @@ export type Ad= {
   seller: string;
 }
 
-// ─── Helper interno ───────────────────────────────────────────────────────────
+export type Comment = {
+  id: number;
+  content: string;
+  author: string;
+  createdAt: string;
+}
+
+// ─── Helper ───────────────────────────────────────────────────────────────────
 
 async function post<T>(path: string, body: object, token?: string): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
@@ -40,14 +42,13 @@ async function post<T>(path: string, body: object, token?: string): Promise<T> {
   });
 
   const data = await response.json();
-
-  if (!response.ok) {
-    // Lança o erro retornado pela API (ex: "este nome de usuário já está em uso")
-    throw new Error(data.error || 'Erro na requisição');
-  }
-
+  if (!response.ok) throw new Error(data.error || 'Erro na requisição');
   return data as T;
-}export async function apiGetAds(): Promise<Ad[]> {
+}
+
+// ─── Anúncios ─────────────────────────────────────────────────────────────────
+
+export async function apiGetAds(): Promise<Ad[]> {
   const response = await fetch(`${API_URL}/ads`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
@@ -75,10 +76,30 @@ export async function apiCreateAd(adData: {
   return data;
 }
 
+// ─── Comentários ──────────────────────────────────────────────────────────────
 
+export async function apiGetComments(adId: number): Promise<Comment[]> {
+  const response = await fetch(`${API_URL}/ads/${adId}/comments`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Erro ao carregar comentários');
+  return data;
+}
 
+export async function apiCreateComment(adId: number, content: string, authorId: number): Promise<Comment> {
+  const response = await fetch(`${API_URL}/ads/${adId}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, authorId }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'Erro ao criar comentário');
+  return data;
+}
 
-// ─── Endpoints públicos ───────────────────────────────────────────────────────
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 export function apiRegister(name: string, password: string) {
   return post<AuthResponse>('/auth/register', { name, password });

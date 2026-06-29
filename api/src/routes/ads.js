@@ -1,11 +1,15 @@
 const express = require('express')
-const prisma = require('../prisma')
+const { PrismaClient } = require('../../generated/prisma')
 const router = express.Router()
 
-// 1. Rota para Salvar o Anúncio no Banco
+const prisma = new PrismaClient()
+
+// POST /ads
 router.post('/', async (req, res) => {
   try {
     const { title, description, price, tag, photo, sellerId } = req.body
+
+    console.log('[Create Ad] Body recebido:', { title, description, price, tag, sellerId, photoLength: photo?.length })
 
     if (!title || !description || !price || !tag || !sellerId) {
       return res.status(400).json({ error: 'Todos os campos são obrigatórios' })
@@ -17,15 +21,14 @@ router.post('/', async (req, res) => {
         description,
         price,
         tag,
-        photo: photo || 'https://picsum.photos/seed/market/400/300',
+        photo: photo || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQMuowloNOhI2zc4H-Hs8cP5yPACmgnfYwn1GWNdZ3zg&s=10',
         sellerId: parseInt(sellerId),
       },
-      include: {
-        seller: { select: { name: true } } // Já traz o nome do vendedor associado
-      }
+      include: { seller: { select: { name: true } } }
     })
 
-    // Formata a resposta para bater com o padrão do Front-end
+    console.log('[Create Ad] Anúncio criado com id:', newAd.id)
+
     res.status(201).json({
       id: newAd.id,
       title: newAd.title,
@@ -37,21 +40,19 @@ router.post('/', async (req, res) => {
     })
   } catch (error) {
     console.error('[Create Ad Error]', error)
-    res.status(500).json({ error: 'Erro ao criar anúncio' })
+    res.status(500).json({ error: 'Erro ao criar anúncio: ' + error.message })
   }
 })
 
-// 2. Rota para Buscar os Anúncios do Banco
+// GET /ads
 router.get('/', async (req, res) => {
   try {
     const ads = await prisma.ad.findMany({
-      orderBy: { createdAt: 'desc' }, // Mais recentes primeiro
-      include: {
-        seller: { select: { name: true } }
-      }
+      orderBy: { createdAt: 'desc' },
+      include: { seller: { select: { name: true } } }
     })
 
-    const formattedAds = ads.map(ad => ({
+    res.json(ads.map(ad => ({
       id: ad.id,
       title: ad.title,
       description: ad.description,
@@ -59,13 +60,15 @@ router.get('/', async (req, res) => {
       tag: ad.tag,
       photo: ad.photo,
       seller: ad.seller.name
-    }))
-
-    res.json(formattedAds)
+    })))
   } catch (error) {
     console.error('[Get Ads Error]', error)
-    res.status(500).json({ error: 'Erro ao buscar anúncios' })
+    res.status(500).json({ error: 'Erro ao buscar anúncios: ' + error.message })
   }
 })
+
+// Monta as rotas de comentários aninhadas: /ads/:adId/comments
+const commentsRouter = require('./comments')
+router.use('/:adId/comments', commentsRouter)
 
 module.exports = router
